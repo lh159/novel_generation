@@ -58,11 +58,37 @@ check_dependencies() {
 cleanup_ports() {
     echo -e "${YELLOW}🧹 清理端口占用...${NC}"
     
+    # 清理特定服务的PID文件和进程
+    for service in mongodb backend frontend; do
+        if [ "$service" = "mongodb" ]; then
+            pidfile="mongodb.pid"
+        else
+            pidfile="$service/$service.pid"
+        fi
+        
+        if [ -f "$pidfile" ]; then
+            PID=$(cat "$pidfile" 2>/dev/null || echo "")
+            if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+                echo -e "${YELLOW}  停止 $service 进程 (PID: $PID)${NC}"
+                kill -TERM "$PID" 2>/dev/null || true
+                sleep 2
+                kill -KILL "$PID" 2>/dev/null || true
+            fi
+            rm -f "$pidfile"
+        fi
+    done
+    
     # 强制终止占用端口的进程
-    lsof -ti :3000,8000,27017 | xargs kill -9 2>/dev/null || true
+    for port in 3000 8000 27017; do
+        PIDS=$(lsof -ti :$port 2>/dev/null || echo "")
+        if [ -n "$PIDS" ]; then
+            echo -e "${YELLOW}  清理端口 $port 上的进程${NC}"
+            echo "$PIDS" | xargs kill -9 2>/dev/null || true
+        fi
+    done
     
     # 等待端口释放
-    sleep 2
+    sleep 3
     
     echo -e "${GREEN}✅ 端口清理完成${NC}"
 }
@@ -119,29 +145,69 @@ start_backend() {
     # 激活虚拟环境
     source venv/bin/activate
     
-    # 安装依赖
-    if [ ! -f ".deps_installed" ]; then
-        echo -e "${YELLOW}📦 安装Python依赖...${NC}"
+    # 检查并安装依赖
+    echo -e "${YELLOW}📦 检查Python依赖...${NC}"
+    
+    # 使用更可靠的依赖检查方式
+    REQUIREMENTS_HASH=$(md5sum requirements.txt 2>/dev/null | cut -d' ' -f1 || echo "")
+    INSTALLED_HASH=""
+    if [ -f ".deps_hash" ]; then
+        INSTALLED_HASH=$(cat .deps_hash 2>/dev/null || echo "")
+    fi
+    
+    # 只有当requirements.txt变化时才重新安装
+    if [ "$REQUIREMENTS_HASH" != "$INSTALLED_HASH" ] || [ ! -d "venv/lib" ]; then
+        echo -e "${YELLOW}📦 安装/更新Python依赖...${NC}"
         pip install -r requirements.txt
-        touch .deps_installed
+        echo "$REQUIREMENTS_HASH" > .deps_hash
+    else
+        echo -e "${GREEN}✅ Python依赖已是最新${NC}"
     fi
     
     # 后台启动FastAPI服务
     echo -e "${YELLOW}🚀 启动FastAPI服务器...${NC}"
-    nohup python3 -m uvicorn main:app --reload --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
+    
+    # 检查是否是开发环境，决定是否使用--reload
+    if [ "${NOVEL_ENV:-development}" = "production" ]; then
+        # 生产环境：不使用reload，更稳定
+        nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
+    else
+        # 开发环境：使用reload但限制监听范围，减少误触发
+        nohup python3 -m uvicorn main:app --reload --reload-dir app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
+    fi
+    
     BACKEND_PID=$!
     echo $BACKEND_PID > backend.pid
     
     # 等待后端启动
     echo -e "${YELLOW}⏳ 等待后端启动...${NC}"
-    for i in {1..30}; do
+    
+    # 增强的启动检查
+    WAIT_TIME=60  # 增加等待时间到60秒
+    for i in $(seq 1 $WAIT_TIME); do
+        # 检查进程是否还在运行
+        if ! kill -0 $BACKEND_PID 2>/dev/null; then
+            echo -e "${RED}❌ 后端进程异常退出${NC}"
+            echo -e "${YELLOW}📋 查看日志: tail -20 backend.log${NC}"
+            exit 1
+        fi
+        
+        # 检查健康状态
         if curl -s http://localhost:8000/health > /dev/null 2>&1; then
             echo -e "${GREEN}✅ 后端服务启动成功 (PID: $BACKEND_PID)${NC}"
             echo -e "${GREEN}   地址: http://localhost:8000${NC}"
             break
         fi
-        if [ $i -eq 30 ]; then
+        
+        # 显示启动进度
+        if [ $((i % 10)) -eq 0 ]; then
+            echo -e "${YELLOW}   等待中... (${i}/${WAIT_TIME}秒)${NC}"
+        fi
+        
+        if [ $i -eq $WAIT_TIME ]; then
             echo -e "${RED}❌ 后端启动超时${NC}"
+            echo -e "${YELLOW}📋 后端日志:${NC}"
+            tail -10 backend.log 2>/dev/null || echo "无法读取日志文件"
             exit 1
         fi
         sleep 1

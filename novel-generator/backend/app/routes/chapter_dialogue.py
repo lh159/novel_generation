@@ -5,6 +5,7 @@ from app.database import connect_to_mongo
 from app.models.chapter_novel import ChapterNovel, ChapterInfo
 # from app.services.deepseek_client import DeepSeekClient  # 已移除DeepSeek依赖
 from app.services.protagonist_roleplay import ProtagonistRoleplaySystem
+from app.services.pinyin_service import pinyin_service
 import os
 import json
 import re
@@ -293,6 +294,16 @@ async def get_current_chapter_dialogue(request: DialogueRequest):
         current_dialogue = roleplay_system.get_current_dialogue(session_id, dialogues)
         current_dialogue["session_id"] = session_id
         
+        # 如果是主角对话，添加拼音标注
+        if current_dialogue.get("is_protagonist_dialogue", False) and current_dialogue.get("text"):
+            try:
+                pinyin_data = pinyin_service.convert_text_to_pinyin(current_dialogue["text"])
+                current_dialogue["pinyin_text"] = pinyin_data
+                print(f"✅ 为主角对话添加拼音标注: {current_dialogue['text'][:20]}...")
+            except Exception as e:
+                print(f"⚠️ 拼音转换失败: {e}")
+                # 即使拼音转换失败，也不影响正常返回
+        
         return current_dialogue
         
     except HTTPException:
@@ -326,6 +337,15 @@ async def advance_chapter_dialogue(request: ConfirmDialogueRequest):
         print(f"🔄 [/advance] 调用 roleplay_system.advance_dialogue...")
         next_dialogue = roleplay_system.advance_dialogue(request.session_id, dialogues)
         
+        # 如果是主角对话，添加拼音标注
+        if next_dialogue.get("is_protagonist_dialogue", False) and next_dialogue.get("text"):
+            try:
+                pinyin_data = pinyin_service.convert_text_to_pinyin(next_dialogue["text"])
+                next_dialogue["pinyin_text"] = pinyin_data
+                print(f"✅ [/advance] 为主角对话添加拼音标注: {next_dialogue['text'][:20]}...")
+            except Exception as e:
+                print(f"⚠️ [/advance] 拼音转换失败: {e}")
+        
         elapsed = time.time() - start_time
         print(f"✅ [/advance] 处理完成，耗时: {elapsed:.3f}秒")
         
@@ -353,6 +373,15 @@ async def confirm_chapter_dialogue(request: ConfirmDialogueRequest):
         
         if "error" in next_dialogue:
             raise HTTPException(status_code=400, detail=next_dialogue["error"])
+        
+        # 如果是主角对话，添加拼音标注
+        if next_dialogue.get("is_protagonist_dialogue", False) and next_dialogue.get("text"):
+            try:
+                pinyin_data = pinyin_service.convert_text_to_pinyin(next_dialogue["text"])
+                next_dialogue["pinyin_text"] = pinyin_data
+                print(f"✅ [/confirm] 为主角对话添加拼音标注: {next_dialogue['text'][:20]}...")
+            except Exception as e:
+                print(f"⚠️ [/confirm] 拼音转换失败: {e}")
         
         next_dialogue["session_id"] = request.session_id
         return next_dialogue

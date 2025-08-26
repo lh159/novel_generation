@@ -9,17 +9,26 @@ import {
   Spin, 
   message, 
   Tag,
-  Progress
+  Progress,
+  Switch
 } from 'antd'
 import { 
   UserOutlined, 
   RobotOutlined, 
   CheckCircleOutlined,
   ArrowLeftOutlined,
-  BookOutlined
+  BookOutlined,
+  SoundOutlined
 } from '@ant-design/icons'
+import PinyinText from '../components/PinyinText'
 
 const { Title, Text } = Typography
+
+interface PinyinChar {
+  char: string
+  pinyin: string
+  is_chinese: boolean
+}
 
 interface Dialogue {
   speaker: string
@@ -30,6 +39,7 @@ interface Dialogue {
   message?: string
   auto_advance?: boolean
   timestamp?: string
+  pinyin_text?: PinyinChar[]  // 添加拼音数据字段
 }
 
 interface NovelInfo {
@@ -58,6 +68,7 @@ const ProtagonistRoleplayPage: React.FC = () => {
   const [chapterInfo, setChapterInfo] = useState<ChapterInfo | null>(null)
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [gameStarted, setGameStarted] = useState(false)  // 控制小说是否已开始
+  const [showPinyin, setShowPinyin] = useState(true)  // 控制是否显示拼音
 
   const dialogueEndRef = useRef<HTMLDivElement>(null)
   const autoAdvanceCountRef = useRef(0)  // 防止无限循环的计数器
@@ -382,14 +393,43 @@ const ProtagonistRoleplayPage: React.FC = () => {
         
         <Card>
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
-            <Title level={3} style={{ margin: 0 }}>
-              <BookOutlined style={{ marginRight: '8px' }} />
-              {novelInfo.title} - 第{chapterInfo.chapter_number}章
-            </Title>
-            <Title level={4} style={{ margin: 0, color: '#666' }}>
-              {chapterInfo.title}
-            </Title>
-            <Text type="secondary">字数: {chapterInfo.word_count} | 状态: {chapterInfo.status}</Text>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div style={{ flex: 1 }}>
+                <Title level={3} style={{ margin: 0 }}>
+                  <BookOutlined style={{ marginRight: '8px' }} />
+                  {novelInfo.title} - 第{chapterInfo.chapter_number}章
+                </Title>
+                <Title level={4} style={{ margin: 0, color: '#666' }}>
+                  {chapterInfo.title}
+                </Title>
+                <Text type="secondary">字数: {chapterInfo.word_count} | 状态: {chapterInfo.status}</Text>
+              </div>
+              
+              {/* 拼音显示控制器 */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                padding: '12px 16px',
+                background: 'rgba(102, 126, 234, 0.05)',
+                borderRadius: '8px',
+                border: '1px solid rgba(102, 126, 234, 0.1)'
+              }}>
+                <SoundOutlined style={{ color: '#667eea' }} />
+                <Text style={{ marginRight: '8px', color: '#667eea', fontWeight: 'medium' }}>
+                  拼音标注
+                </Text>
+                <Switch
+                  checked={showPinyin}
+                  onChange={setShowPinyin}
+                  size="small"
+                  style={{
+                    backgroundColor: showPinyin ? '#667eea' : undefined
+                  }}
+                />
+              </div>
+            </div>
+            
             <Progress 
               percent={Math.round((dialogueHistory.length / 10) * 100)}  // 假设每章最多10个对话
               size="small" 
@@ -506,14 +546,21 @@ const ProtagonistRoleplayPage: React.FC = () => {
             
             <div style={{ 
               fontSize: '1rem', 
-              lineHeight: '1.6', 
+              lineHeight: dialogue.is_protagonist_dialogue && dialogue.pinyin_text && showPinyin ? '2.5' : '1.6', 
               textAlign: 'left',
               padding: '12px',
               background: dialogue.is_protagonist_dialogue ? 'rgba(102, 126, 234, 0.05)' : 'rgba(0, 0, 0, 0.02)',
               borderRadius: '8px',
               border: dialogue.is_protagonist_dialogue ? '1px solid rgba(102, 126, 234, 0.1)' : '1px solid rgba(0, 0, 0, 0.06)'
             }}>
-              {dialogue.text}
+              {dialogue.is_protagonist_dialogue && dialogue.pinyin_text ? (
+                <PinyinText 
+                  pinyinData={dialogue.pinyin_text}
+                  showPinyin={showPinyin}
+                />
+              ) : (
+                dialogue.text
+              )}
             </div>
           </Space>
         </Card>
@@ -551,14 +598,22 @@ const ProtagonistRoleplayPage: React.FC = () => {
             
             <div style={{ 
               fontSize: '1.1rem', 
-              lineHeight: '1.8', 
+              lineHeight: currentDialogue.is_protagonist_dialogue && currentDialogue.pinyin_text && showPinyin ? '2.8' : '1.8', 
               textAlign: 'left',
               padding: '16px',
               background: currentDialogue.is_protagonist_dialogue ? 'rgba(102, 126, 234, 0.05)' : 'rgba(0, 0, 0, 0.02)',
               borderRadius: '12px',
               border: currentDialogue.is_protagonist_dialogue ? '1px solid rgba(102, 126, 234, 0.1)' : '1px solid rgba(0, 0, 0, 0.06)'
             }}>
-              {currentDialogue.text}
+              {currentDialogue.is_protagonist_dialogue && currentDialogue.pinyin_text ? (
+                <PinyinText 
+                  pinyinData={currentDialogue.pinyin_text}
+                  showPinyin={showPinyin}
+                  style={{ fontSize: '1.1rem' }}
+                />
+              ) : (
+                currentDialogue.text
+              )}
             </div>
             
             {currentDialogue.required_chars_used && currentDialogue.required_chars_used.length > 0 && (

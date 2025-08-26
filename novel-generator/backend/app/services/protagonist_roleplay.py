@@ -90,7 +90,7 @@ class ProtagonistRoleplaySystem:
                 'speaker': current_dialogue['speaker'],
                 'text': current_dialogue['text'],
                 'timestamp': datetime.now().isoformat(),
-                'is_protagonist': current_dialogue.get('is_protagonist', False)
+                'is_protagonist_dialogue': current_dialogue.get('is_protagonist', False)
             })
         
         # 推进到下一个对白
@@ -118,7 +118,7 @@ class ProtagonistRoleplaySystem:
                 'speaker': '主角',
                 'text': session['current_protagonist_dialogue']['text'],
                 'timestamp': datetime.now().isoformat(),
-                'is_protagonist': True
+                'is_protagonist_dialogue': True
             })
         
         # 推进到下一个对白
