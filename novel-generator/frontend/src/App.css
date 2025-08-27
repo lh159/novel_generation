@@ -87,3 +87,94 @@
   color: #666;
   line-height: 1.6;
 }
+
+/* 动画效果 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+  }
+}
+
+/* 对话卡片动画 */
+.dialogue-card {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.protagonist-dialogue {
+  animation: slideInRight 0.5s ease-out;
+}
+
+.other-dialogue {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+/* 历史对话样式 - 无动画，避免闪动 */
+.history-dialogue {
+  opacity: 0.85;
+  transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.history-dialogue:hover {
+  opacity: 1;
+}
+
+/* 当前对话样式 - 保留动画效果 */
+.current-dialogue {
+  /* 动画通过现有的 protagonist-dialogue 和 other-dialogue 类来处理 */
+}
+
+/* 按钮悬停效果 */
+.ant-btn:hover {
+  animation: pulse 0.3s ease-in-out;
+}

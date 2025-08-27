@@ -381,28 +381,57 @@ const ProtagonistRoleplayPage: React.FC = () => {
   }
 
   return (
-    <div className="page-container">
+    <div className="page-container" style={{ 
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',  // 添加背景渐变
+      minHeight: '100vh',
+      padding: '20px'
+    }}>
       <div style={{ marginBottom: '24px' }}>
         <Button 
           icon={<ArrowLeftOutlined />} 
           onClick={() => navigate('/novels')}
-          style={{ marginBottom: '16px' }}
+          style={{ 
+            marginBottom: '16px',
+            borderRadius: '8px',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+            border: 'none',
+            background: 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(10px)'
+          }}
         >
           返回小说列表
         </Button>
         
-        <Card>
+        <Card style={{
+          borderRadius: '16px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+          border: 'none',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)'
+        }}>
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ flex: 1 }}>
-                <Title level={3} style={{ margin: 0 }}>
-                  <BookOutlined style={{ marginRight: '8px' }} />
+                <Title level={3} style={{ 
+                  margin: 0,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
+                  <BookOutlined style={{ marginRight: '8px', color: '#667eea' }} />
                   {novelInfo.title} - 第{chapterInfo.chapter_number}章
                 </Title>
-                <Title level={4} style={{ margin: 0, color: '#666' }}>
+                <Title level={4} style={{ 
+                  margin: '8px 0 4px 0', 
+                  color: '#5a6c7d',
+                  fontWeight: '600'
+                }}>
                   {chapterInfo.title}
                 </Title>
-                <Text type="secondary">字数: {chapterInfo.word_count} | 状态: {chapterInfo.status}</Text>
+                <Text type="secondary" style={{ fontSize: '14px' }}>
+                  字数: {chapterInfo.word_count} | 状态: {chapterInfo.status}
+                </Text>
               </div>
               
               {/* 拼音显示控制器 */}
@@ -434,6 +463,14 @@ const ProtagonistRoleplayPage: React.FC = () => {
               percent={Math.round((dialogueHistory.length / 10) * 100)}  // 假设每章最多10个对话
               size="small" 
               status="active"
+              strokeColor={{
+                '0%': '#667eea',
+                '100%': '#764ba2',
+              }}
+              trailColor="rgba(102, 126, 234, 0.1)"
+              style={{
+                marginTop: '8px'
+              }}
             />
           </Space>
         </Card>
@@ -515,43 +552,90 @@ const ProtagonistRoleplayPage: React.FC = () => {
       {/* 历史对话记录 */}
       {gameStarted && dialogueHistory.map((dialogue, index) => (
         <Card
-          key={index}
-          className={`dialogue-card ${dialogue.is_protagonist_dialogue ? 'protagonist-dialogue' : 'other-dialogue'}`}
+          key={`history-${index}-${dialogue.timestamp}`}
+          className="dialogue-card history-dialogue"
           style={{ 
-            marginBottom: '16px',
-            border: dialogue.is_protagonist_dialogue ? '2px solid #667eea' : '1px solid #d9d9d9',
-            boxShadow: dialogue.is_protagonist_dialogue ? '0 4px 12px rgba(102, 126, 234, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.06)',
-            background: dialogue.is_protagonist_dialogue ? 'linear-gradient(135deg, #f5f7ff 0%, #ffffff 100%)' : '#ffffff',
-            opacity: 0.8
+            marginBottom: '20px',
+            border: 'none',
+            borderRadius: '16px',
+            boxShadow: dialogue.is_protagonist_dialogue 
+              ? '0 8px 32px rgba(102, 126, 234, 0.15)' 
+              : '0 8px 32px rgba(0, 0, 0, 0.08)',
+            background: dialogue.is_protagonist_dialogue 
+              ? 'linear-gradient(135deg, #f5f7ff 0%, #ffffff 100%)' 
+              : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+            backdropFilter: 'blur(10px)',
+            transition: 'all 0.3s ease',
+            transform: 'translateY(0)',
+            opacity: 0.85,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)'
+            e.currentTarget.style.opacity = '1'
+            e.currentTarget.style.boxShadow = dialogue.is_protagonist_dialogue 
+              ? '0 12px 40px rgba(102, 126, 234, 0.25)' 
+              : '0 12px 40px rgba(0, 0, 0, 0.12)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.opacity = '0.85'
+            e.currentTarget.style.boxShadow = dialogue.is_protagonist_dialogue 
+              ? '0 8px 32px rgba(102, 126, 234, 0.15)' 
+              : '0 8px 32px rgba(0, 0, 0, 0.08)'
           }}
         >
           <Space direction="vertical" size={16} style={{ width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <Avatar
                 icon={dialogue.is_protagonist_dialogue ? <UserOutlined /> : <RobotOutlined />}
-                size={48}
+                size={56}
                 style={{ 
-                  backgroundColor: dialogue.is_protagonist_dialogue ? '#667eea' : '#52c41a'
+                  backgroundColor: dialogue.is_protagonist_dialogue ? '#667eea' : '#52c41a',
+                  border: '3px solid rgba(255, 255, 255, 0.8)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
                 }}
               />
               <div>
-                <div style={{ fontSize: '1rem', fontWeight: 'bold', marginBottom: '2px' }}>
+                <div style={{ 
+                  fontSize: '1.1rem', 
+                  fontWeight: '700', 
+                  marginBottom: '4px',
+                  background: dialogue.is_protagonist_dialogue 
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    : 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
                   {dialogue.is_protagonist_dialogue ? '你 (主角)' : dialogue.speaker}
                 </div>
-                <Tag color={dialogue.is_protagonist_dialogue ? 'blue' : 'green'}>
-                  {dialogue.is_protagonist_dialogue ? '主角' : '配角'}
+                <Tag 
+                  style={{
+                    background: dialogue.is_protagonist_dialogue 
+                      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      : 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '16px',
+                    padding: '4px 12px',
+                    fontWeight: '600',
+                    fontSize: '12px'
+                  }}
+                >
+                  {dialogue.is_protagonist_dialogue ? '✨ 主角' : '🎭 配角'}
                 </Tag>
               </div>
             </div>
             
             <div style={{ 
               fontSize: '1rem', 
-              lineHeight: dialogue.is_protagonist_dialogue && dialogue.pinyin_text && showPinyin ? '2.5' : '1.6', 
+              lineHeight: dialogue.is_protagonist_dialogue && dialogue.pinyin_text && showPinyin ? '3.2' : '1.6', 
               textAlign: 'left',
-              padding: '12px',
+              padding: '16px',
               background: dialogue.is_protagonist_dialogue ? 'rgba(102, 126, 234, 0.05)' : 'rgba(0, 0, 0, 0.02)',
               borderRadius: '8px',
-              border: dialogue.is_protagonist_dialogue ? '1px solid rgba(102, 126, 234, 0.1)' : '1px solid rgba(0, 0, 0, 0.06)'
+              border: dialogue.is_protagonist_dialogue ? '1px solid rgba(102, 126, 234, 0.1)' : '1px solid rgba(0, 0, 0, 0.06)',
+              wordSpacing: dialogue.is_protagonist_dialogue && dialogue.pinyin_text && showPinyin ? '0.2em' : 'normal'
             }}>
               {dialogue.is_protagonist_dialogue && dialogue.pinyin_text ? (
                 <PinyinText 
@@ -569,41 +653,74 @@ const ProtagonistRoleplayPage: React.FC = () => {
       {/* 当前对白显示区域 */}
       {gameStarted && currentDialogue && (
         <Card
-          className={`dialogue-card ${currentDialogue.is_protagonist_dialogue ? 'protagonist-dialogue' : 'other-dialogue'}`}
+          key={`current-${currentDialogue.timestamp || Date.now()}`}
+          className={`dialogue-card current-dialogue ${currentDialogue.is_protagonist_dialogue ? 'protagonist-dialogue' : 'other-dialogue'}`}
           style={{ 
             marginBottom: '24px',
-            border: currentDialogue.is_protagonist_dialogue ? '2px solid #667eea' : '1px solid #d9d9d9',
-            boxShadow: currentDialogue.is_protagonist_dialogue ? '0 4px 12px rgba(102, 126, 234, 0.15)' : '0 2px 8px rgba(0, 0, 0, 0.06)',
-            background: currentDialogue.is_protagonist_dialogue ? 'linear-gradient(135deg, #f5f7ff 0%, #ffffff 100%)' : '#ffffff'
+            border: 'none',
+            borderRadius: '20px',
+            boxShadow: currentDialogue.is_protagonist_dialogue 
+              ? '0 12px 40px rgba(102, 126, 234, 0.25)' 
+              : '0 12px 40px rgba(0, 0, 0, 0.15)',
+            background: currentDialogue.is_protagonist_dialogue 
+              ? 'linear-gradient(135deg, #f5f7ff 0%, #ffffff 100%)' 
+              : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+            backdropFilter: 'blur(15px)',
+            position: 'relative'
           }}
         >
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <Avatar
                 icon={currentDialogue.is_protagonist_dialogue ? <UserOutlined /> : <RobotOutlined />}
-                size={64}
+                size={72}
                 style={{ 
-                  backgroundColor: currentDialogue.is_protagonist_dialogue ? '#667eea' : '#52c41a'
+                  backgroundColor: currentDialogue.is_protagonist_dialogue ? '#667eea' : '#52c41a',
+                  border: '4px solid rgba(255, 255, 255, 0.8)',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)'
                 }}
               />
               <div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '4px' }}>
+                <div style={{ 
+                  fontSize: '1.3rem', 
+                  fontWeight: '700', 
+                  marginBottom: '6px',
+                  background: currentDialogue.is_protagonist_dialogue 
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                    : 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}>
                   {currentDialogue.is_protagonist_dialogue ? '你 (主角)' : currentDialogue.speaker}
                 </div>
-                <Tag color={currentDialogue.is_protagonist_dialogue ? 'blue' : 'green'}>
-                  {currentDialogue.is_protagonist_dialogue ? '主角' : '配角'}
+                <Tag 
+                  style={{
+                    background: currentDialogue.is_protagonist_dialogue 
+                      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      : 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '16px',
+                    padding: '4px 12px',
+                    fontWeight: '600',
+                    fontSize: '12px'
+                  }}
+                >
+                  {currentDialogue.is_protagonist_dialogue ? '✨ 主角' : '🎭 配角'}
                 </Tag>
               </div>
             </div>
             
             <div style={{ 
               fontSize: '1.1rem', 
-              lineHeight: currentDialogue.is_protagonist_dialogue && currentDialogue.pinyin_text && showPinyin ? '2.8' : '1.8', 
+              lineHeight: currentDialogue.is_protagonist_dialogue && currentDialogue.pinyin_text && showPinyin ? '3.2' : '1.8', 
               textAlign: 'left',
-              padding: '16px',
+              padding: '20px',
               background: currentDialogue.is_protagonist_dialogue ? 'rgba(102, 126, 234, 0.05)' : 'rgba(0, 0, 0, 0.02)',
               borderRadius: '12px',
-              border: currentDialogue.is_protagonist_dialogue ? '1px solid rgba(102, 126, 234, 0.1)' : '1px solid rgba(0, 0, 0, 0.06)'
+              border: currentDialogue.is_protagonist_dialogue ? '1px solid rgba(102, 126, 234, 0.1)' : '1px solid rgba(0, 0, 0, 0.06)',
+              wordSpacing: currentDialogue.is_protagonist_dialogue && currentDialogue.pinyin_text && showPinyin ? '0.2em' : 'normal'
             }}>
               {currentDialogue.is_protagonist_dialogue && currentDialogue.pinyin_text ? (
                 <PinyinText 
@@ -674,7 +791,7 @@ const ProtagonistRoleplayPage: React.FC = () => {
               e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)'
             }}
           >
-            确认读完，继续剧情
+            ✅ 确认读完，继续剧情
           </Button>
         </div>
       )}
