@@ -40,13 +40,15 @@ class PinyinService:
         result = []
         
         try:
-            # 使用pypinyin转换，保留声调，不显示多音字选项
-            pinyin_list = pinyin(text, style=Style.TONE, heteronym=False)
-            
-            for i, char in enumerate(text):
+            for char in text:
                 if self._is_chinese_char(char):
-                    # 中文字符，添加拼音
-                    py = pinyin_list[i][0] if i < len(pinyin_list) else ''
+                    # 中文字符，单独获取拼音
+                    try:
+                        char_pinyin = pinyin(char, style=Style.TONE, heteronym=False)
+                        py = char_pinyin[0][0] if char_pinyin and len(char_pinyin) > 0 else ''
+                    except:
+                        py = ''
+                    
                     result.append({
                         "char": char,
                         "pinyin": py,
